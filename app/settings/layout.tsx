@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 
-export default function ProtectedLayout({
+export default function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
