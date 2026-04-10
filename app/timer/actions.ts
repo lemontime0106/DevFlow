@@ -15,6 +15,20 @@ function toNullableText(value: FormDataEntryValue | null) {
   return text.length > 0 ? text : null;
 }
 
+function getElapsedMinutes(
+  startedAt: string,
+  accumulatedMinutes: number | null | undefined,
+) {
+  const startedAtMs = new Date(startedAt).getTime();
+  const nowMs = Date.now();
+  const elapsedSinceStart = Math.max(
+    0,
+    Math.round((nowMs - startedAtMs) / 60000),
+  );
+
+  return Math.max(0, (accumulatedMinutes ?? 0) + elapsedSinceStart);
+}
+
 export async function startSessionAction(formData: FormData) {
   const authState = await getAuthUser();
   if (!authState) {
@@ -45,6 +59,7 @@ export async function startSessionAction(formData: FormData) {
     focus_minutes: focusMinutes,
     break_minutes: breakMinutes,
     planned_minutes: focusMinutes,
+    actual_minutes: 0,
     status: "active",
     title: "",
   });
@@ -129,9 +144,7 @@ export async function completeSessionAction(formData: FormData) {
   const endedAt = new Date();
   const actualMinutes = Math.max(
     1,
-    Math.round(
-      (endedAt.getTime() - new Date(session.started_at).getTime()) / 60000,
-    ),
+    getElapsedMinutes(session.started_at, session.actual_minutes),
   );
 
   const { error } = await supabase
@@ -148,6 +161,119 @@ export async function completeSessionAction(formData: FormData) {
     })
     .eq("id", sessionId)
     .eq("user_id", authState.user.id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/timer");
+  revalidatePath("/dashboard");
+  revalidatePath("/history");
+}
+
+export async function interruptSessionAction(formData: FormData) {
+  const authState = await getAuthUser();
+  if (!authState) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
+  const sessionId = String(formData.get("sessionId") ?? "");
+  if (!sessionId) return;
+
+  const supabase = await createClient();
+  const { data: session, error: fetchError } = await supabase
+    .from("sessions")
+    .select("*")
+    .eq("id", sessionId)
+    .eq("user_id", authState.user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (fetchError) {
+    throw new Error(fetchError.message);
+  }
+
+  if (!session) {
+    revalidatePath("/timer");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("sessions")
+    .update({
+      status: "interrupted",
+      ended_at: new Date().toISOString(),
+      actual_minutes: getElapsedMinutes(
+        session.started_at,
+        session.actual_minutes,
+      ),
+    })
+    .eq("id", sessionId)
+    .eq("user_id", authState.user.id)
+    .eq("status", "active");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/timer");
+  revalidatePath("/dashboard");
+  revalidatePath("/history");
+}
+
+export async function resumeInterruptedSessionAction(formData: FormData) {
+  const authState = await getAuthUser();
+  if (!authState) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
+  const sessionId = String(formData.get("sessionId") ?? "");
+  if (!sessionId) return;
+
+  const supabase = await createClient();
+  const [{ data: existingActive, error: activeError }, { data: session, error: fetchError }] =
+    await Promise.all([
+      supabase
+        .from("sessions")
+        .select("id")
+        .eq("user_id", authState.user.id)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("sessions")
+        .select("*")
+        .eq("id", sessionId)
+        .eq("user_id", authState.user.id)
+        .eq("status", "interrupted")
+        .maybeSingle(),
+    ]);
+
+  if (activeError) {
+    throw new Error(activeError.message);
+  }
+
+  if (fetchError) {
+    throw new Error(fetchError.message);
+  }
+
+  if (existingActive || !session) {
+    revalidatePath("/timer");
+    return;
+  }
+
+  const resumedAt = new Date().toISOString();
+  const { error } = await supabase
+    .from("sessions")
+    .update({
+      status: "active",
+      started_at: resumedAt,
+      ended_at: null,
+      actual_minutes: session.actual_minutes ?? 0,
+    })
+    .eq("id", session.id)
+    .eq("user_id", authState.user.id)
+    .eq("status", "interrupted");
 
   if (error) {
     throw new Error(error.message);

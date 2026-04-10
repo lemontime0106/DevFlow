@@ -6,6 +6,38 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+const statusLabel: Record<string, string> = {
+  active: "진행 중",
+  completed: "완료",
+  cancelled: "취소",
+  interrupted: "중단",
+};
+
+function formatChangeSummary(
+  percent: number | null,
+  totalFocusMinutes: number,
+) {
+  if (percent === null) {
+    return "어제와 비교할 데이터가 없습니다.";
+  }
+
+  if (totalFocusMinutes === 0) {
+    return "어제보다 기록이 줄었습니다.";
+  }
+
+  if (Math.abs(percent) >= 300) {
+    return percent > 0
+      ? "어제보다 집중 시간이 크게 늘었습니다."
+      : "어제보다 집중 시간이 크게 줄었습니다.";
+  }
+
+  if (percent === 0) {
+    return "어제와 비슷한 수준입니다.";
+  }
+
+  return `어제 대비 ${percent > 0 ? "+" : ""}${percent}%`;
+}
+
 function DashboardFallback() {
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
@@ -69,7 +101,14 @@ async function DashboardContent() {
               {data.summary.totalFocusMinutes}분
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              어제 대비 {data.summary.changeFromYesterdayPercent ?? 0}%
+              {formatChangeSummary(
+                data.summary.changeFromYesterdayPercent,
+                data.summary.totalFocusMinutes,
+              )}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              목표 {data.summary.goalFocusMinutes ?? "-"}분 /
+              진행률 {data.summary.focusGoalProgressPercent ?? 0}%
             </p>
           </CardContent>
         </Card>
@@ -84,6 +123,10 @@ async function DashboardContent() {
           <CardContent>
             <p className="text-3xl font-semibold tracking-tight">
               {data.summary.completedSessions}개
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              목표 {data.summary.goalSessions ?? "-"}개 /
+              진행률 {data.summary.sessionGoalProgressPercent ?? 0}%
             </p>
           </CardContent>
         </Card>
@@ -177,7 +220,8 @@ async function DashboardContent() {
                     {new Date(session.startedAt).toLocaleString("ko-KR")}
                   </p>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    상태: {session.status} / 기록 시간: {session.actualMinutes ?? 0}분
+                    상태: {statusLabel[session.status] ?? session.status} / 기록 시간:{" "}
+                    {session.actualMinutes ?? 0}분
                   </p>
                 </div>
               ))

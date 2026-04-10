@@ -65,4 +65,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  select {
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--background));
+  }
+  option {
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--background));
+  }
 }

@@ -91,12 +91,17 @@ export interface DailyDashboardSummary {
   topCategoryName: string | null;
   bestTimeBlock: string | null;
   changeFromYesterdayPercent: number | null;
+  goalFocusMinutes: number | null;
+  goalSessions: number | null;
+  focusGoalProgressPercent: number | null;
+  sessionGoalProgressPercent: number | null;
   insightSummary?: string | null;
 }
 
 export interface WeeklyCategoryBreakdown {
   categoryId: string | null;
   categoryName: string;
+  categoryColor: string | null;
   totalMinutes: number;
   share: number;
 }
@@ -109,6 +114,13 @@ export interface WeeklyTimeBlockStat {
   completionRate: number | null;
 }
 
+export interface WeeklyDayStat {
+  label: string;
+  date: string;
+  totalMinutes: number;
+  sessions: number;
+}
+
 export interface WeeklyReportSummary {
   totalFocusMinutes: number;
   totalSessions: number;
@@ -116,6 +128,9 @@ export interface WeeklyReportSummary {
   goalAchievementRate: number | null;
   topCategoryName: string | null;
   bestTimeBlock: string | null;
+  interruptionRate: number | null;
+  longestFocusStreakDays: number;
+  categorySwitchCount: number;
 }
 
 export interface InsightMessage {

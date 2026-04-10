@@ -1,6 +1,12 @@
 "use client";
 
-import { cancelSessionAction, completeSessionAction, startSessionAction } from "@/app/timer/actions";
+import {
+  cancelSessionAction,
+  completeSessionAction,
+  interruptSessionAction,
+  resumeInterruptedSessionAction,
+  startSessionAction,
+} from "@/app/timer/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { TimerPageData } from "@/lib/sessions/types";
-import { Clock3, PlayCircle, Square, StopCircle } from "lucide-react";
+import { Clock3, PauseCircle, PlayCircle, RotateCcw, Square, StopCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 interface TimerWorkspaceProps {
@@ -53,13 +59,21 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
     if (!data.activeSession) return null;
 
     const startedAt = new Date(data.activeSession.startedAt).getTime();
-    const elapsedSeconds = Math.floor((now - startedAt) / 1000);
+    const accumulatedSeconds = (data.activeSession.actualMinutes ?? 0) * 60;
+    const elapsedSeconds =
+      accumulatedSeconds + Math.max(0, Math.floor((now - startedAt) / 1000));
     const remainingSeconds =
       data.activeSession.focusMinutes * 60 - elapsedSeconds;
 
     return {
       elapsedSeconds,
       remainingSeconds,
+      progressPercent: Math.min(
+        100,
+        Math.round(
+          (elapsedSeconds / (data.activeSession.focusMinutes * 60)) * 100,
+        ),
+      ),
     };
   }, [data.activeSession, now]);
 
@@ -153,7 +167,7 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
               진행 상태
             </CardTitle>
             <CardDescription>
-              종료 전까지는 active 세션으로 유지되고, 종료 시 기록 폼으로 마무리됩니다.
+              중단 시 현재까지의 누적 시간을 저장하고, 이후 이어서 재개할 수 있습니다.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -180,6 +194,20 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
                   <p className="mt-4 text-sm text-muted-foreground">
                     시작 시각: {new Date(data.activeSession.startedAt).toLocaleString("ko-KR")}
                   </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    누적 진행률: {activeMetrics.progressPercent}%
+                  </p>
+                  <div className="mt-4 h-2 rounded-full bg-muted">
+                    <div
+                      className="h-2 rounded-full bg-sky-600 transition-[width]"
+                      style={{ width: `${activeMetrics.progressPercent}%` }}
+                    />
+                  </div>
+                  {activeMetrics.remainingSeconds <= 0 ? (
+                    <p className="mt-4 text-sm font-medium text-emerald-600">
+                      목표 시간이 지났습니다. 지금 기록을 남기고 세션을 마무리할 수 있습니다.
+                    </p>
+                  ) : null}
                 </div>
 
                 <form action={completeSessionAction} className="space-y-5">
@@ -241,6 +269,16 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
                     </Button>
                     <Button
                       type="submit"
+                      formAction={interruptSessionAction}
+                      variant="secondary"
+                      className="flex-1"
+                      formNoValidate
+                    >
+                      <PauseCircle className="h-4 w-4" />
+                      일시정지
+                    </Button>
+                    <Button
+                      type="submit"
                       formAction={cancelSessionAction}
                       variant="outline"
                       className="flex-1"
@@ -252,6 +290,38 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
                   </div>
                 </form>
               </div>
+            ) : data.resumableSession ? (
+              <div className="space-y-6">
+                <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50/70 p-6 dark:border-amber-900 dark:bg-amber-950/30">
+                  <p className="text-sm uppercase tracking-[0.24em] text-amber-700 dark:text-amber-400">
+                    Interrupted Session
+                  </p>
+                  <p className="mt-3 text-xl font-semibold tracking-tight">
+                    {data.resumableSession.title || "이어서 진행할 세션"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {data.resumableSession.actualMinutes ?? 0}분까지 진행한 세션이 있습니다.
+                    같은 설정으로 다시 시작해 남은 시간을 이어갈 수 있습니다.
+                  </p>
+                  <div className="mt-5 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+                    <p>집중 시간: {data.resumableSession.focusMinutes}분</p>
+                    <p>휴식 시간: {data.resumableSession.breakMinutes}분</p>
+                    <p>누적 시간: {data.resumableSession.actualMinutes ?? 0}분</p>
+                  </div>
+                </div>
+
+                <form action={resumeInterruptedSessionAction}>
+                  <input
+                    type="hidden"
+                    name="sessionId"
+                    value={data.resumableSession.id}
+                  />
+                  <Button className="w-full">
+                    <RotateCcw className="h-4 w-4" />
+                    중단된 세션 이어서 시작
+                  </Button>
+                </form>
+              </div>
             ) : (
               <div className="rounded-[1.5rem] border border-dashed border-border/70 bg-muted/20 p-8 text-center">
                 <p className="text-lg font-medium text-foreground">
@@ -259,7 +329,7 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
                 </p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   왼쪽에서 세션을 시작하면 이 영역에서 경과 시간과 기록 입력 폼이
-                  함께 열립니다.
+                  함께 열립니다. 중단된 세션이 있으면 여기서 바로 복원할 수 있습니다.
                 </p>
               </div>
             )}

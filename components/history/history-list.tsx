@@ -1,3 +1,4 @@
+import { CategoryBadge } from "@/components/sessions/category-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import type { HistoryFilters, HistoryPageData } from "@/lib/sessions/types";
@@ -14,8 +15,48 @@ const statusLabel: Record<string, string> = {
   interrupted: "중단",
 };
 
+const difficultyLabel: Record<string, string> = {
+  easy: "쉬움",
+  normal: "보통",
+  hard: "어려움",
+};
+
+function formatDateTime(value: string | null) {
+  if (!value) return "-";
+  return new Date(value).toLocaleString("ko-KR");
+}
+
+function getStatusTone(status: string) {
+  switch (status) {
+    case "completed":
+      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
+    case "interrupted":
+      return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400";
+    case "cancelled":
+      return "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400";
+    default:
+      return "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400";
+  }
+}
+
+function getStatusDescription(status: string) {
+  switch (status) {
+    case "completed":
+      return "세션이 정상적으로 종료되어 기록까지 저장된 상태입니다.";
+    case "interrupted":
+      return "중간에 멈춘 세션입니다. 타이머 화면에서 이어서 진행할 수 있습니다.";
+    case "cancelled":
+      return "사용자가 취소한 세션입니다. 통계에는 반영되지 않습니다.";
+    default:
+      return "현재 진행 중인 세션입니다.";
+  }
+}
+
 export function HistoryList({ data, filters }: HistoryListProps) {
   const categoryMap = new Map(data.categories.map((category) => [category.id, category]));
+  const interruptedCount = data.sessions.filter(
+    (session) => session.status === "interrupted",
+  ).length;
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
@@ -71,6 +112,15 @@ export function HistoryList({ data, filters }: HistoryListProps) {
         </CardContent>
       </Card>
 
+      {interruptedCount > 0 ? (
+        <Card className="rounded-[1.75rem] border-amber-500/30 bg-amber-500/5">
+          <CardContent className="p-6 text-sm leading-6 text-muted-foreground">
+            현재 필터 기준으로 중단된 세션이 {interruptedCount}개 있습니다. 최근부터
+            다시 이어갈 세션을 찾으려면 상태 필터를 `중단`으로 두고 확인하면 됩니다.
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="space-y-4">
         {data.sessions.length === 0 ? (
           <Card className="rounded-[1.75rem] border-border/70">
@@ -93,25 +143,56 @@ export function HistoryList({ data, filters }: HistoryListProps) {
                         {session.title || "제목 없는 세션"}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {new Date(session.startedAt).toLocaleString("ko-KR")}
+                        시작: {formatDateTime(session.startedAt)}
                       </p>
+                      {session.endedAt ? (
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          종료: {formatDateTime(session.endedAt)}
+                        </p>
+                      ) : null}
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs">
-                      <span className="rounded-full border border-border/70 px-3 py-1">
+                      <span
+                        className={`rounded-full border px-3 py-1 ${getStatusTone(session.status)}`}
+                      >
                         {statusLabel[session.status] ?? session.status}
                       </span>
                       <span className="rounded-full border border-border/70 px-3 py-1">
                         {session.actualMinutes ?? 0}분
                       </span>
+                      <CategoryBadge
+                        color={category?.color ?? null}
+                        name={category?.name ?? "카테고리 없음"}
+                      />
                       <span className="rounded-full border border-border/70 px-3 py-1">
-                        {category?.name ?? "카테고리 없음"}
+                        목표 {session.plannedMinutes}분
                       </span>
                     </div>
                   </div>
+                  <div className="rounded-2xl bg-muted/25 p-4 text-sm leading-6 text-muted-foreground">
+                    {getStatusDescription(session.status)}
+                  </div>
                   <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
-                    <p>난이도: {session.difficulty ?? "-"}</p>
-                    <p>집중도: {session.selfRating ?? "-"}</p>
+                    <p>
+                      난이도:{" "}
+                      {session.difficulty
+                        ? difficultyLabel[session.difficulty] ?? session.difficulty
+                        : "-"}
+                    </p>
+                    <p>
+                      집중도:{" "}
+                      {session.selfRating ? `${session.selfRating}점` : "-"}
+                    </p>
                     <p>휴식: {session.breakMinutes}분</p>
+                  </div>
+                  <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
+                    <p>실제 기록 시간: {session.actualMinutes ?? 0}분</p>
+                    <p>
+                      계획 대비:{" "}
+                      {(session.actualMinutes ?? 0) - session.plannedMinutes >= 0 ? "+" : ""}
+                      {(session.actualMinutes ?? 0) - session.plannedMinutes}분
+                    </p>
+                    <p>ID 기준 상태: {statusLabel[session.status] ?? session.status}</p>
                   </div>
                   {session.memo ? (
                     <div className="rounded-2xl bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">

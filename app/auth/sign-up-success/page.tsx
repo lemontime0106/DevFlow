@@ -23,6 +23,10 @@ export default function Page() {
                 인증 메일의 링크를 누르면 DevFlow 대시보드로 이동합니다. 메일이
                 보이지 않으면 스팸함도 확인해 주세요.
               </p>
+              <div className="rounded-2xl bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">
+                인증 메일이 도착하지 않았다면 로그인 화면에서 같은 이메일을 입력한 뒤
+                `인증 메일 다시 보내기`를 사용할 수 있습니다.
+              </div>
               <Button asChild className="w-full" variant="outline">
                 <Link href="/auth/login">로그인 화면으로 이동</Link>
               </Button>
