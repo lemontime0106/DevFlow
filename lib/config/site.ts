@@ -6,6 +6,22 @@ export const siteConfig = {
   stack: ["Next.js", "TypeScript", "Tailwind CSS", "Supabase"],
 } as const;
 
+export function getSiteUrl() {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL.trim().replace(/\/$/, "");
+  }
+
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.trim()}`;
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.trim()}`;
+  }
+
+  return "http://localhost:3000";
+}
+
 export const appNavigation = [
   {
     href: "/dashboard",

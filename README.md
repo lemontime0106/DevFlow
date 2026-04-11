@@ -50,8 +50,11 @@ npm run dev
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-or-anon-key
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
+
+Vercel 배포 후에는 `NEXT_PUBLIC_SITE_URL`을 실제 서비스 주소로 설정하면
+canonical URL, Open Graph URL, `sitemap.xml`, `robots.txt`가 같은 주소를 기준으로 생성됩니다.
 
 ## Foundation Notes
 

@@ -97,8 +97,8 @@ docs/
 
 추가 가능:
 
-- `NEXT_PUBLIC_APP_URL`
-  - 배포 주소 기반 공유 링크나 메타데이터 확장 시 사용
+- `NEXT_PUBLIC_SITE_URL`
+  - 배포 주소 기반 canonical URL, sitemap, Open Graph 메타데이터에 사용
 
 ---
 

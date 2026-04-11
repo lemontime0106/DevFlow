@@ -83,8 +83,9 @@ export async function cancelSessionAction(formData: FormData) {
   if (!sessionId) return;
 
   const endedAt = new Date().toISOString();
+  const supabase = await createClient();
 
-  const { error } = await createClient()
+  const { error } = await supabase
     .from("sessions")
     .update({
       status: "cancelled",

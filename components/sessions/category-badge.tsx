@@ -15,22 +15,22 @@ export function CategoryBadge({
   name,
   className,
 }: CategoryBadgeProps) {
-  const hasColor = isHexColor(color);
+  const badgeColor = isHexColor(color) ? color : null;
 
   return (
     <span
       className={cn(
         "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
-        !hasColor &&
+        !badgeColor &&
           "border-border/70 bg-muted/30 text-muted-foreground",
         className,
       )}
       style={
-        hasColor
+        badgeColor
           ? {
-              color,
-              borderColor: `${color}55`,
-              backgroundColor: `${color}14`,
+              color: badgeColor,
+              borderColor: `${badgeColor}55`,
+              backgroundColor: `${badgeColor}14`,
             }
           : undefined
       }

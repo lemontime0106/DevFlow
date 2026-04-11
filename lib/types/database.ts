@@ -37,6 +37,7 @@ export type Database = {
           updated_at?: string;
           user_id?: string | null;
         };
+        Relationships: [];
       };
       daily_goals: {
         Row: {
@@ -69,6 +70,7 @@ export type Database = {
           updated_at?: string;
           user_id?: string;
         };
+        Relationships: [];
       };
       sessions: {
         Row: {
@@ -125,6 +127,7 @@ export type Database = {
           updated_at?: string;
           user_id?: string;
         };
+        Relationships: [];
       };
       users: {
         Row: {
@@ -151,7 +154,10 @@ export type Database = {
           timezone?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
   };
 };
