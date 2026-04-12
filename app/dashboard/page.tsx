@@ -72,6 +72,19 @@ async function DashboardContent() {
   }
 
   const data = await getDashboardPageData(authState.user.id);
+  const remainingFocusMinutes =
+    data.summary.goalFocusMinutes === null
+      ? null
+      : Math.max(
+          0,
+          data.summary.goalFocusMinutes - data.summary.totalFocusMinutes,
+        );
+  const focusGoalStatus =
+    remainingFocusMinutes === null
+      ? null
+      : remainingFocusMinutes === 0
+        ? "오늘 집중 목표를 달성했습니다."
+        : `오늘 목표까지 ${remainingFocusMinutes}분 남았습니다.`;
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
@@ -106,10 +119,21 @@ async function DashboardContent() {
                 data.summary.totalFocusMinutes,
               )}
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              목표 {data.summary.goalFocusMinutes ?? "-"}분 /
-              진행률 {data.summary.focusGoalProgressPercent ?? 0}%
-            </p>
+            {data.summary.goalFocusMinutes ? (
+              <p className="mt-1 text-sm text-muted-foreground">
+                목표 {data.summary.goalFocusMinutes}분 / 진행률{" "}
+                {data.summary.focusGoalProgressPercent ?? 0}%
+              </p>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">
+                오늘 목표가 아직 설정되지 않았습니다.
+              </p>
+            )}
+            {focusGoalStatus ? (
+              <p className="mt-1 text-sm font-medium text-foreground">
+                {focusGoalStatus}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -124,10 +148,16 @@ async function DashboardContent() {
             <p className="text-3xl font-semibold tracking-tight">
               {data.summary.completedSessions}개
             </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              목표 {data.summary.goalSessions ?? "-"}개 /
-              진행률 {data.summary.sessionGoalProgressPercent ?? 0}%
-            </p>
+            {data.summary.goalSessions ? (
+              <p className="mt-2 text-sm text-muted-foreground">
+                목표 {data.summary.goalSessions}개 / 진행률{" "}
+                {data.summary.sessionGoalProgressPercent ?? 0}%
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">
+                세션 수 목표가 아직 설정되지 않았습니다.
+              </p>
+            )}
           </CardContent>
         </Card>
 

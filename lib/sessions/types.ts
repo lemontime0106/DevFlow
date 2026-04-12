@@ -37,6 +37,7 @@ export interface DashboardPageData {
 export interface SettingsPageData {
   dailyGoal: DailyGoal | null;
   goalDate: string;
+  categories: Category[];
 }
 
 export interface WeeklyReportPageData {

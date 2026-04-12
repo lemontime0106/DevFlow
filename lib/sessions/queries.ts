@@ -570,12 +570,15 @@ export async function getSettingsPageData(
 ): Promise<SettingsPageData> {
   const supabase = await createClient();
   const goalDate = getGoalDate();
-  const { data, error } = await supabase
-    .from("daily_goals")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("goal_date", goalDate)
-    .maybeSingle();
+  const [{ data, error }, categories] = await Promise.all([
+    supabase
+      .from("daily_goals")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("goal_date", goalDate)
+      .maybeSingle(),
+    getCategoriesForUser(userId),
+  ]);
 
   if (error) {
     throw new Error(error.message);
@@ -584,6 +587,7 @@ export async function getSettingsPageData(
   return {
     dailyGoal: data ? mapDailyGoal(data) : null,
     goalDate,
+    categories,
   };
 }
 
