@@ -1,13 +1,13 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Info } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface ToastFeedbackProps {
   message: string | null;
-  tone?: "success" | "info";
+  tone?: "success" | "info" | "error";
 }
 
 export function ToastFeedback({
@@ -41,17 +41,22 @@ export function ToastFeedback({
     <div
       className={cn(
         "fixed bottom-4 right-4 z-50 flex max-w-sm items-start gap-3 rounded-2xl border px-4 py-3 shadow-lg backdrop-blur",
-        tone === "success"
-          ? "border-emerald-500/30 bg-emerald-500/12 text-foreground"
-          : "border-sky-500/30 bg-sky-500/12 text-foreground",
+        tone === "success" &&
+          "border-emerald-500/30 bg-emerald-500/12 text-foreground",
+        tone === "info" &&
+          "border-sky-500/30 bg-sky-500/12 text-foreground",
+        tone === "error" &&
+          "border-red-500/30 bg-red-500/12 text-foreground",
       )}
       role="status"
       aria-live="polite"
     >
       {tone === "success" ? (
         <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-      ) : (
+      ) : tone === "info" ? (
         <Info className="mt-0.5 h-4 w-4 text-sky-600 dark:text-sky-400" />
+      ) : (
+        <AlertCircle className="mt-0.5 h-4 w-4 text-red-600 dark:text-red-400" />
       )}
       <p className="text-sm leading-6">{message}</p>
     </div>

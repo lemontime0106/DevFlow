@@ -1,4 +1,9 @@
-import { upsertDailyGoalAction } from "@/app/settings/actions";
+import {
+  createCategoryAction,
+  updateCategoryAction,
+  upsertDailyGoalAction,
+} from "@/app/settings/actions";
+import { CategoryBadge } from "@/components/sessions/category-badge";
 import { ToastFeedback } from "@/components/ui/toast-feedback";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getAuthUser } from "@/lib/auth/get-auth-user";
 import { getSettingsPageData } from "@/lib/sessions/queries";
-import { Target, Timer, TrendingUp } from "lucide-react";
+import { Palette, Target, Timer, TrendingUp } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -27,11 +32,40 @@ function SettingsFallback() {
   );
 }
 
+function getSettingsToast(params: { saved?: string; error?: string }) {
+  if (params.saved === "goal") {
+    return "오늘 목표가 저장되었습니다.";
+  }
+
+  if (params.saved === "category") {
+    return "카테고리가 추가되었습니다.";
+  }
+
+  if (params.saved === "category-updated") {
+    return "카테고리가 수정되었습니다.";
+  }
+
+  if (params.error === "duplicate-category") {
+    return "이미 같은 이름의 카테고리가 있습니다.";
+  }
+
+  if (params.error === "invalid-category") {
+    return "카테고리 이름과 색상을 다시 확인해 주세요.";
+  }
+
+  if (params.error === "category-not-found") {
+    return "수정할 수 있는 카테고리를 찾지 못했습니다.";
+  }
+
+  return null;
+}
+
 async function SettingsContent({
   searchParams,
 }: {
   searchParams: Promise<{
     saved?: string;
+    error?: string;
   }>;
 }) {
   const authState = await getAuthUser();
@@ -42,12 +76,18 @@ async function SettingsContent({
 
   const params = await searchParams;
   const data = await getSettingsPageData(authState.user.id);
-  const toastMessage =
-    params.saved === "goal" ? "오늘 목표가 저장되었습니다." : null;
+  const toastMessage = getSettingsToast(params);
+  const toastTone = params.error ? "error" : "success";
+  const defaultCategories = data.categories.filter(
+    (category) => category.isDefault,
+  );
+  const customCategories = data.categories.filter(
+    (category) => !category.isDefault,
+  );
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
-      <ToastFeedback message={toastMessage} />
+      <ToastFeedback message={toastMessage} tone={toastTone} />
       <div className="rounded-[2rem] border border-border/70 bg-background/90 p-8 shadow-sm">
         <p className="text-sm font-semibold uppercase tracking-[0.28em] text-emerald-600">
           Settings
@@ -141,6 +181,130 @@ async function SettingsContent({
           <Card className="rounded-[1.75rem] border-border/70">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
+                <Palette className="h-5 w-5 text-fuchsia-600" />
+                카테고리 추가
+              </CardTitle>
+              <CardDescription>
+                추가한 카테고리는 타이머, 히스토리, 주간 리포트에서 바로 사용할 수 있습니다.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={createCategoryAction} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category-name">카테고리 이름</Label>
+                  <Input
+                    id="category-name"
+                    name="categoryName"
+                    placeholder="예: Code Review"
+                    maxLength={40}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category-color">색상</Label>
+                  <Input
+                    id="category-color"
+                    name="categoryColor"
+                    type="color"
+                    defaultValue="#10b981"
+                    className="h-11 p-1"
+                  />
+                </div>
+                <Button className="w-full">카테고리 추가</Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[1.75rem] border-border/70">
+            <CardHeader>
+              <CardTitle className="text-lg">현재 카테고리</CardTitle>
+              <CardDescription>
+                기본 카테고리와 직접 추가한 카테고리를 함께 표시합니다.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Custom
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {customCategories.length > 0 ? (
+                    customCategories.map((category) => (
+                      <form
+                        key={category.id}
+                        action={updateCategoryAction}
+                        className="w-full rounded-xl border border-border/70 bg-muted/20 p-3"
+                      >
+                        <input
+                          type="hidden"
+                          name="categoryId"
+                          value={category.id}
+                        />
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                          <div className="flex-1 space-y-2">
+                            <Label htmlFor={`category-name-${category.id}`}>
+                              이름
+                            </Label>
+                            <Input
+                              id={`category-name-${category.id}`}
+                              name="categoryName"
+                              defaultValue={category.name}
+                              maxLength={40}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2 sm:w-24">
+                            <Label htmlFor={`category-color-${category.id}`}>
+                              색상
+                            </Label>
+                            <Input
+                              id={`category-color-${category.id}`}
+                              name="categoryColor"
+                              type="color"
+                              defaultValue={category.color}
+                              className="h-9 p-1"
+                            />
+                          </div>
+                          <Button type="submit" variant="secondary">
+                            수정
+                          </Button>
+                        </div>
+                      </form>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      아직 직접 추가한 카테고리가 없습니다.
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Default
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {defaultCategories.map((category) => (
+                    <div
+                      key={category.id}
+                      className="flex items-center gap-2 rounded-xl border border-border/70 bg-muted/20 px-3 py-2"
+                    >
+                      <CategoryBadge
+                        name={category.name}
+                        color={category.color}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        기본
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[1.75rem] border-border/70">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <TrendingUp className="h-5 w-5 text-amber-600" />
                 다음 확장 후보
               </CardTitle>
@@ -160,6 +324,7 @@ async function SettingsContent({
 export default function SettingsPage(props: {
   searchParams: Promise<{
     saved?: string;
+    error?: string;
   }>;
 }) {
   return (

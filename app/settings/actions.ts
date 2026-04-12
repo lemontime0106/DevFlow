@@ -15,6 +15,25 @@ function toGoalDate(value: FormDataEntryValue | null) {
   return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : null;
 }
 
+function toCategoryName(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim().replace(/\s+/g, " ");
+  return text.length >= 1 && text.length <= 40 ? text : null;
+}
+
+function toHexColor(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+  return /^#[0-9A-Fa-f]{6}$/.test(text) ? text : "#10b981";
+}
+
+function toUuid(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    text,
+  )
+    ? text
+    : null;
+}
+
 export async function upsertDailyGoalAction(formData: FormData) {
   const authState = await getAuthUser();
   if (!authState) {
@@ -57,4 +76,86 @@ export async function upsertDailyGoalAction(formData: FormData) {
   revalidatePath("/settings");
   revalidatePath("/dashboard");
   redirect("/settings?saved=goal");
+}
+
+export async function createCategoryAction(formData: FormData) {
+  const authState = await getAuthUser();
+  if (!authState) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
+  const name = toCategoryName(formData.get("categoryName"));
+  if (!name) {
+    redirect("/settings?error=invalid-category");
+  }
+
+  const color = toHexColor(formData.get("categoryColor"));
+  const supabase = await createClient();
+  const { error } = await supabase.from("categories").insert({
+    user_id: authState.user.id,
+    name,
+    color,
+    is_default: false,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      redirect("/settings?error=duplicate-category");
+    }
+
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/timer");
+  revalidatePath("/history");
+  revalidatePath("/reports/weekly");
+  revalidatePath("/dashboard");
+  redirect("/settings?saved=category");
+}
+
+export async function updateCategoryAction(formData: FormData) {
+  const authState = await getAuthUser();
+  if (!authState) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
+  const categoryId = toUuid(formData.get("categoryId"));
+  const name = toCategoryName(formData.get("categoryName"));
+  if (!categoryId || !name) {
+    redirect("/settings?error=invalid-category");
+  }
+
+  const color = toHexColor(formData.get("categoryColor"));
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("categories")
+    .update({
+      name,
+      color,
+    })
+    .eq("id", categoryId)
+    .eq("user_id", authState.user.id)
+    .eq("is_default", false)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === "23505") {
+      redirect("/settings?error=duplicate-category");
+    }
+
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    redirect("/settings?error=category-not-found");
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/timer");
+  revalidatePath("/history");
+  revalidatePath("/reports/weekly");
+  revalidatePath("/dashboard");
+  redirect("/settings?saved=category-updated");
 }
