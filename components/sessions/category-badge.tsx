@@ -20,9 +20,9 @@ export function CategoryBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
         !badgeColor &&
-          "border-border/70 bg-muted/30 text-muted-foreground",
+          "border-primary/30 bg-primary/15 text-primary",
         className,
       )}
       style={

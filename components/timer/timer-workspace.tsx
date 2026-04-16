@@ -79,11 +79,11 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
-      <div className="rounded-[2rem] border border-border/70 bg-background/90 p-8 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.28em] text-emerald-600">
+      <div className="devflow-panel p-8">
+        <p className="devflow-kicker">
           Timer
         </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">
           세션을 시작하고 끝난 직후 바로 기록하세요.
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
@@ -93,10 +93,10 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl">
-              <PlayCircle className="h-5 w-5 text-emerald-600" />
+              <PlayCircle className="h-5 w-5 text-primary" />
               새 집중 세션 시작
             </CardTitle>
             <CardDescription>
@@ -138,7 +138,7 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
                   <button
                     key={preset.label}
                     type="button"
-                    className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-4 text-left transition hover:bg-muted/70"
+                    className="rounded-lg border border-border bg-secondary px-4 py-4 text-left transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#2F3A49] hover:bg-[#1B222C] active:scale-[0.98]"
                     onClick={() => {
                       setFocusMinutes(preset.focus);
                       setBreakMinutes(preset.breakMinutes);
@@ -160,10 +160,10 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl">
-              <Clock3 className="h-5 w-5 text-sky-600" />
+              <Clock3 className="h-5 w-5 text-primary" />
               진행 상태
             </CardTitle>
             <CardDescription>
@@ -173,20 +173,20 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
           <CardContent>
             {data.activeSession && activeMetrics ? (
               <div className="space-y-6">
-                <div className="rounded-[1.5rem] border border-border/70 bg-muted/30 p-6">
-                  <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
+                <div className="rounded-lg border border-primary/30 bg-primary/10 p-6">
+                  <p className="text-sm uppercase text-muted-foreground">
                     Active Session
                   </p>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
                       <p className="text-sm text-muted-foreground">경과 시간</p>
-                      <p className="mt-1 text-3xl font-semibold tracking-tight">
+                      <p className="mt-1 font-mono text-5xl font-semibold">
                         {formatDuration(activeMetrics.elapsedSeconds)}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">남은 시간</p>
-                      <p className="mt-1 text-3xl font-semibold tracking-tight">
+                      <p className="mt-1 font-mono text-5xl font-semibold">
                         {formatDuration(activeMetrics.remainingSeconds)}
                       </p>
                     </div>
@@ -197,14 +197,14 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
                   <p className="mt-2 text-sm text-muted-foreground">
                     누적 진행률: {activeMetrics.progressPercent}%
                   </p>
-                  <div className="mt-4 h-2 rounded-full bg-muted">
+                  <div className="mt-4 h-2 rounded-full bg-border">
                     <div
-                      className="h-2 rounded-full bg-sky-600 transition-[width]"
+                      className="h-2 rounded-full bg-primary transition-[width]"
                       style={{ width: `${activeMetrics.progressPercent}%` }}
                     />
                   </div>
                   {activeMetrics.remainingSeconds <= 0 ? (
-                    <p className="mt-4 text-sm font-medium text-emerald-600">
+                    <p className="mt-4 text-sm font-medium text-green-500">
                       목표 시간이 지났습니다. 지금 기록을 남기고 세션을 마무리할 수 있습니다.
                     </p>
                   ) : null}
@@ -292,11 +292,11 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
               </div>
             ) : data.resumableSession ? (
               <div className="space-y-6">
-                <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50/70 p-6 dark:border-amber-900 dark:bg-amber-950/30">
-                  <p className="text-sm uppercase tracking-[0.24em] text-amber-700 dark:text-amber-400">
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
+                  <p className="text-sm uppercase text-amber-500">
                     Interrupted Session
                   </p>
-                  <p className="mt-3 text-xl font-semibold tracking-tight">
+                  <p className="mt-3 text-xl font-semibold">
                     {data.resumableSession.title || "이어서 진행할 세션"}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -323,7 +323,7 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
                 </form>
               </div>
             ) : (
-              <div className="rounded-[1.5rem] border border-dashed border-border/70 bg-muted/20 p-8 text-center">
+              <div className="rounded-lg border border-dashed border-border bg-secondary/70 p-8 text-center">
                 <p className="text-lg font-medium text-foreground">
                   진행 중인 세션이 없습니다.
                 </p>

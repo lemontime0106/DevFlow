@@ -166,7 +166,7 @@ export function LoginForm({
                 />
               </div>
               {error ? (
-                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
                   <p className="font-medium text-foreground">{error}</p>
                   {needsEmailConfirmation ? (
                     <p className="mt-2 leading-6 text-muted-foreground">
@@ -177,7 +177,7 @@ export function LoginForm({
                 </div>
               ) : null}
               {needsEmailConfirmation ? (
-                <div className="rounded-2xl bg-muted/30 p-4 text-sm">
+                <div className="rounded-lg border border-border bg-secondary/60 p-4 text-sm">
                   <p className="font-medium text-foreground">
                     다음 단계
                   </p>

@@ -6,7 +6,7 @@ import { Suspense } from "react";
 function LoginPageFallback() {
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="h-80 w-full max-w-sm rounded-3xl border border-border/70 bg-background/80" />
+      <div className="h-80 w-full max-w-sm rounded-lg border border-border bg-card" />
     </div>
   );
 }

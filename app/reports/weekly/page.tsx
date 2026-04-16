@@ -25,9 +25,9 @@ const statusLabel: Record<string, string> = {
 function WeeklyReportFallback() {
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
-      <div className="rounded-[2rem] border border-border/70 bg-background/90 p-8 shadow-sm">
-        <div className="h-4 w-24 rounded bg-muted/40" />
-        <div className="mt-3 h-10 w-80 rounded-xl bg-muted/50" />
+      <div className="devflow-panel p-8">
+        <div className="devflow-skeleton h-4 w-24" />
+        <div className="devflow-skeleton mt-3 h-10 w-80" />
       </div>
     </section>
   );
@@ -44,53 +44,53 @@ async function WeeklyReportContent() {
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
-      <div className="rounded-[2rem] border border-border/70 bg-background/90 p-8 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.28em] text-emerald-600">
+      <div className="devflow-panel p-8">
+        <p className="devflow-kicker">
           Weekly Report
         </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">
           최근 7일 집중 패턴을 한 번에 읽습니다.
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
           총 시간, 평균 세션 길이, 요일 흐름, 시간대별 성과를 같은 화면에서 빠르게
           확인할 수 있게 정리했습니다.
         </p>
-        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-border/70 px-4 py-2 text-sm text-muted-foreground">
+        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-4 py-2 text-sm text-muted-foreground">
           <CalendarRange className="h-4 w-4" />
           {data.weekRangeLabel}
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Clock3 className="h-4 w-4 text-sky-600" />
+              <Clock3 className="h-4 w-4 text-primary" />
               주간 총 집중 시간
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tracking-tight">
+            <p className="text-3xl font-semibold">
               {data.summary.totalFocusMinutes}분
             </p>
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Timer className="h-4 w-4 text-emerald-600" />
+              <Timer className="h-4 w-4 text-green-500" />
               완료 세션 수
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tracking-tight">
+            <p className="text-3xl font-semibold">
               {data.summary.totalSessions}개
             </p>
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <BarChart3 className="h-4 w-4 text-amber-600" />
@@ -98,21 +98,21 @@ async function WeeklyReportContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tracking-tight">
+            <p className="text-3xl font-semibold">
               {data.summary.averageSessionMinutes}분
             </p>
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Sparkles className="h-4 w-4 text-fuchsia-600" />
+              <Sparkles className="h-4 w-4 text-purple-500" />
               목표 달성률
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tracking-tight">
+            <p className="text-3xl font-semibold">
               {data.summary.goalAchievementRate ?? 0}%
             </p>
           </CardContent>
@@ -120,21 +120,21 @@ async function WeeklyReportContent() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Timer className="h-4 w-4 text-emerald-600" />
+              <Timer className="h-4 w-4 text-green-500" />
               연속 집중일
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tracking-tight">
+            <p className="text-3xl font-semibold">
               {data.summary.longestFocusStreakDays}일
             </p>
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <PauseCircle className="h-4 w-4 text-amber-600" />
@@ -142,21 +142,21 @@ async function WeeklyReportContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tracking-tight">
+            <p className="text-3xl font-semibold">
               {data.summary.interruptionRate ?? 0}%
             </p>
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <GitCompareArrows className="h-4 w-4 text-sky-600" />
+              <GitCompareArrows className="h-4 w-4 text-primary" />
               카테고리 전환
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tracking-tight">
+            <p className="text-3xl font-semibold">
               {data.summary.categorySwitchCount}회
             </p>
           </CardContent>
@@ -164,7 +164,7 @@ async function WeeklyReportContent() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle>요일별 흐름</CardTitle>
           </CardHeader>
@@ -190,9 +190,9 @@ async function WeeklyReportContent() {
                       {day.totalMinutes}분 / {day.sessions}세션
                     </p>
                   </div>
-                  <div className="h-2 rounded-full bg-muted">
+                  <div className="h-2 rounded-full bg-border">
                     <div
-                      className="h-2 rounded-full bg-emerald-600 transition-[width]"
+                      className="h-2 rounded-full bg-primary transition-[width]"
                       style={{ width: `${width}%` }}
                     />
                   </div>
@@ -202,25 +202,25 @@ async function WeeklyReportContent() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle>주간 요약</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
-            <div className="rounded-2xl bg-muted/30 p-4">
+            <div className="rounded-lg border border-border bg-secondary/60 p-4">
               <p className="font-medium text-foreground">가장 많이 한 카테고리</p>
               <p className="mt-2">
                 {data.summary.topCategoryName ?? "아직 데이터 없음"}
               </p>
             </div>
-            <div className="rounded-2xl bg-muted/30 p-4">
+            <div className="rounded-lg border border-border bg-secondary/60 p-4">
               <p className="font-medium text-foreground">가장 집중된 시간대</p>
               <p className="mt-2">
                 {data.summary.bestTimeBlock ?? "아직 데이터 없음"}
               </p>
             </div>
             {data.insights.map((insight) => (
-              <div key={`${insight.kind}-${insight.title}`} className="rounded-2xl bg-muted/30 p-4">
+              <div key={`${insight.kind}-${insight.title}`} className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-4">
                 <p className="font-medium text-foreground">{insight.title}</p>
                 <p className="mt-2 leading-6">{insight.summary}</p>
               </div>
@@ -230,7 +230,7 @@ async function WeeklyReportContent() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <FolderKanban className="h-5 w-5 text-amber-600" />
@@ -254,7 +254,7 @@ async function WeeklyReportContent() {
                       {item.totalMinutes}분 / {item.share}%
                     </p>
                   </div>
-                  <div className="h-2 rounded-full bg-muted">
+                  <div className="h-2 rounded-full bg-border">
                     <div
                       className="h-2 rounded-full bg-amber-500 transition-[width]"
                       style={{ width: `${Math.max(item.share, 6)}%` }}
@@ -266,10 +266,10 @@ async function WeeklyReportContent() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Sparkles className="h-5 w-5 text-fuchsia-600" />
+              <Sparkles className="h-5 w-5 text-purple-500" />
               시간대별 성과
             </CardTitle>
           </CardHeader>
@@ -277,7 +277,7 @@ async function WeeklyReportContent() {
             {data.timeBlocks.map((block) => (
               <div
                 key={block.label}
-                className="rounded-2xl border border-border/70 bg-muted/20 p-4"
+                className="rounded-lg border border-border bg-secondary/60 p-4"
               >
                 <div className="flex items-center justify-between">
                   <p className="font-medium text-foreground">{block.label}</p>
@@ -296,7 +296,7 @@ async function WeeklyReportContent() {
         </Card>
       </div>
 
-      <Card className="rounded-[1.75rem] border-border/70">
+      <Card>
         <CardHeader>
           <CardTitle>최근 완료 세션</CardTitle>
         </CardHeader>
@@ -309,7 +309,7 @@ async function WeeklyReportContent() {
             data.recentCompletedSessions.map((session) => (
               <div
                 key={session.id}
-                className="rounded-2xl border border-border/70 bg-muted/20 p-4"
+                className="rounded-lg border border-border bg-transparent p-4 transition hover:bg-[#1B222C]"
               >
                 <p className="font-medium text-foreground">
                   {session.title || "제목 없는 세션"}

@@ -29,13 +29,13 @@ function formatDateTime(value: string | null) {
 function getStatusTone(status: string) {
   switch (status) {
     case "completed":
-      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
+      return "border-green-500/30 bg-green-500/10 text-green-500";
     case "interrupted":
       return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400";
     case "cancelled":
       return "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400";
     default:
-      return "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400";
+      return "border-primary/30 bg-primary/10 text-primary";
   }
 }
 
@@ -60,16 +60,16 @@ export function HistoryList({ data, filters }: HistoryListProps) {
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
-      <div className="rounded-[2rem] border border-border/70 bg-background/90 p-8 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.28em] text-emerald-600">
+      <div className="devflow-panel p-8">
+        <p className="devflow-kicker">
           History
         </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">
           저장된 세션을 날짜와 상태별로 다시 확인합니다.
         </h1>
       </div>
 
-      <Card className="rounded-[1.75rem] border-border/70">
+      <Card className="sticky top-28 z-10">
         <CardHeader>
           <CardTitle>필터</CardTitle>
         </CardHeader>
@@ -99,13 +99,13 @@ export function HistoryList({ data, filters }: HistoryListProps) {
             <div className="space-y-2">
               <label className="text-sm font-medium">날짜</label>
               <input
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-secondary px-3 py-1 text-sm text-foreground shadow-sm"
                 type="date"
                 name="date"
                 defaultValue={filters.date ?? ""}
               />
             </div>
-            <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground md:col-span-3">
+            <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-[#2563EB] active:scale-[0.98] md:col-span-3">
               필터 적용
             </button>
           </form>
@@ -113,7 +113,7 @@ export function HistoryList({ data, filters }: HistoryListProps) {
       </Card>
 
       {interruptedCount > 0 ? (
-        <Card className="rounded-[1.75rem] border-amber-500/30 bg-amber-500/5">
+        <Card className="border-amber-500/30 bg-amber-500/10">
           <CardContent className="p-6 text-sm leading-6 text-muted-foreground">
             현재 필터 기준으로 중단된 세션이 {interruptedCount}개 있습니다. 최근부터
             다시 이어갈 세션을 찾으려면 상태 필터를 `중단`으로 두고 확인하면 됩니다.
@@ -123,7 +123,7 @@ export function HistoryList({ data, filters }: HistoryListProps) {
 
       <div className="space-y-4">
         {data.sessions.length === 0 ? (
-          <Card className="rounded-[1.75rem] border-border/70">
+          <Card>
             <CardContent className="p-8 text-sm text-muted-foreground">
               조건에 맞는 세션이 없습니다. 타이머에서 첫 세션을 완료해 보세요.
             </CardContent>
@@ -135,7 +135,7 @@ export function HistoryList({ data, filters }: HistoryListProps) {
               : null;
 
             return (
-              <Card key={session.id} className="rounded-[1.75rem] border-border/70">
+              <Card key={session.id}>
                 <CardContent className="flex flex-col gap-4 p-6">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
@@ -153,23 +153,24 @@ export function HistoryList({ data, filters }: HistoryListProps) {
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs">
                       <span
-                        className={`rounded-full border px-3 py-1 ${getStatusTone(session.status)}`}
+                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 ${getStatusTone(session.status)}`}
                       >
+                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
                         {statusLabel[session.status] ?? session.status}
                       </span>
-                      <span className="rounded-full border border-border/70 px-3 py-1">
+                      <span className="rounded-full border border-border px-3 py-1">
                         {session.actualMinutes ?? 0}분
                       </span>
                       <CategoryBadge
                         color={category?.color ?? null}
                         name={category?.name ?? "카테고리 없음"}
                       />
-                      <span className="rounded-full border border-border/70 px-3 py-1">
+                      <span className="rounded-full border border-border px-3 py-1">
                         목표 {session.plannedMinutes}분
                       </span>
                     </div>
                   </div>
-                  <div className="rounded-2xl bg-muted/25 p-4 text-sm leading-6 text-muted-foreground">
+                  <div className="rounded-lg border border-border bg-secondary/60 p-4 text-sm leading-6 text-muted-foreground">
                     {getStatusDescription(session.status)}
                   </div>
                   <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
@@ -195,7 +196,7 @@ export function HistoryList({ data, filters }: HistoryListProps) {
                     <p>ID 기준 상태: {statusLabel[session.status] ?? session.status}</p>
                   </div>
                   {session.memo ? (
-                    <div className="rounded-2xl bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">
+                    <div className="rounded-lg border border-border bg-secondary/60 p-4 text-sm leading-6 text-muted-foreground">
                       {session.memo}
                     </div>
                   ) : null}

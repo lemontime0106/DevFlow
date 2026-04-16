@@ -7,9 +7,9 @@ import { Suspense } from "react";
 function HistoryFallback() {
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
-      <div className="rounded-[2rem] border border-border/70 bg-background/90 p-8 shadow-sm">
-        <div className="h-4 w-20 rounded bg-muted/40" />
-        <div className="mt-3 h-10 w-72 rounded-xl bg-muted/50" />
+      <div className="devflow-panel p-8">
+        <div className="devflow-skeleton h-4 w-20" />
+        <div className="devflow-skeleton mt-3 h-10 w-72" />
       </div>
     </section>
   );

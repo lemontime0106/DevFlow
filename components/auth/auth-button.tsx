@@ -6,13 +6,15 @@ import Link from "next/link";
 export async function AuthButton() {
   const supabase = await createClient();
 
-  const { data } = await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims().catch(() => ({
+    data: null,
+  }));
   const user = data?.claims;
 
   return user ? (
     <div className="flex items-center gap-3">
       <div className="hidden text-right sm:block">
-        <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+        <p className="text-xs uppercase text-muted-foreground">
           Signed in
         </p>
         <p className="max-w-48 truncate text-sm font-medium text-foreground">

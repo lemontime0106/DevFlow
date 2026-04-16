@@ -24,9 +24,9 @@ import { Suspense } from "react";
 function SettingsFallback() {
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
-      <div className="rounded-[2rem] border border-border/70 bg-background/90 p-8 shadow-sm">
-        <div className="h-4 w-20 rounded bg-muted/40" />
-        <div className="mt-3 h-10 w-72 rounded-xl bg-muted/50" />
+      <div className="devflow-panel p-8">
+        <div className="devflow-skeleton h-4 w-20" />
+        <div className="devflow-skeleton mt-3 h-10 w-72" />
       </div>
     </section>
   );
@@ -88,11 +88,11 @@ async function SettingsContent({
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
       <ToastFeedback message={toastMessage} tone={toastTone} />
-      <div className="rounded-[2rem] border border-border/70 bg-background/90 p-8 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.28em] text-emerald-600">
+      <div className="devflow-panel p-8">
+        <p className="devflow-kicker">
           Settings
         </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">
           오늘 기준 목표를 설정하고 대시보드와 연결합니다.
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
@@ -102,10 +102,10 @@ async function SettingsContent({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl">
-              <Target className="h-5 w-5 text-emerald-600" />
+              <Target className="h-5 w-5 text-green-500" />
               오늘의 목표 설정
             </CardTitle>
             <CardDescription>
@@ -158,10 +158,10 @@ async function SettingsContent({
         </Card>
 
         <div className="space-y-6">
-          <Card className="rounded-[1.75rem] border-border/70">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Timer className="h-5 w-5 text-sky-600" />
+                <Timer className="h-5 w-5 text-primary" />
                 현재 연결 상태
               </CardTitle>
             </CardHeader>
@@ -178,10 +178,10 @@ async function SettingsContent({
             </CardContent>
           </Card>
 
-          <Card className="rounded-[1.75rem] border-border/70">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Palette className="h-5 w-5 text-fuchsia-600" />
+                <Palette className="h-5 w-5 text-purple-500" />
                 카테고리 추가
               </CardTitle>
               <CardDescription>
@@ -215,7 +215,7 @@ async function SettingsContent({
             </CardContent>
           </Card>
 
-          <Card className="rounded-[1.75rem] border-border/70">
+          <Card>
             <CardHeader>
               <CardTitle className="text-lg">현재 카테고리</CardTitle>
               <CardDescription>
@@ -224,7 +224,7 @@ async function SettingsContent({
             </CardHeader>
             <CardContent className="space-y-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">
                   Custom
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -233,7 +233,7 @@ async function SettingsContent({
                       <form
                         key={category.id}
                         action={updateCategoryAction}
-                        className="w-full rounded-xl border border-border/70 bg-muted/20 p-3"
+                        className="w-full rounded-lg border border-border bg-secondary/60 p-3"
                       >
                         <input
                           type="hidden"
@@ -279,14 +279,14 @@ async function SettingsContent({
                 </div>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">
                   Default
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {defaultCategories.map((category) => (
                     <div
                       key={category.id}
-                      className="flex items-center gap-2 rounded-xl border border-border/70 bg-muted/20 px-3 py-2"
+                      className="flex items-center gap-2 rounded-lg border border-border bg-secondary/60 px-3 py-2"
                     >
                       <CategoryBadge
                         name={category.name}
@@ -302,7 +302,7 @@ async function SettingsContent({
             </CardContent>
           </Card>
 
-          <Card className="rounded-[1.75rem] border-border/70">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <TrendingUp className="h-5 w-5 text-amber-600" />

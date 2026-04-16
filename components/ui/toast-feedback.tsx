@@ -40,11 +40,11 @@ export function ToastFeedback({
   return (
     <div
       className={cn(
-        "fixed bottom-4 right-4 z-50 flex max-w-sm items-start gap-3 rounded-2xl border px-4 py-3 shadow-lg backdrop-blur",
+        "fixed bottom-4 right-4 z-50 flex max-w-sm items-start gap-3 rounded-lg border px-4 py-3 shadow-lg backdrop-blur",
         tone === "success" &&
-          "border-emerald-500/30 bg-emerald-500/12 text-foreground",
+          "border-green-500/30 bg-green-500/10 text-foreground",
         tone === "info" &&
-          "border-sky-500/30 bg-sky-500/12 text-foreground",
+          "border-primary/30 bg-primary/10 text-foreground",
         tone === "error" &&
           "border-red-500/30 bg-red-500/12 text-foreground",
       )}
@@ -52,9 +52,9 @@ export function ToastFeedback({
       aria-live="polite"
     >
       {tone === "success" ? (
-        <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-500" />
       ) : tone === "info" ? (
-        <Info className="mt-0.5 h-4 w-4 text-sky-600 dark:text-sky-400" />
+        <Info className="mt-0.5 h-4 w-4 text-primary" />
       ) : (
         <AlertCircle className="mt-0.5 h-4 w-4 text-red-600 dark:text-red-400" />
       )}

@@ -41,21 +41,21 @@ function formatChangeSummary(
 function DashboardFallback() {
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
-      <div className="rounded-[2rem] border border-border/70 bg-background/90 p-8 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.28em] text-emerald-600">
+      <div className="devflow-panel p-8">
+        <p className="devflow-kicker">
           Dashboard
         </p>
-        <div className="mt-3 h-10 w-72 rounded-xl bg-muted/50" />
-        <div className="mt-3 h-6 w-full max-w-2xl rounded-xl bg-muted/40" />
+        <div className="devflow-skeleton mt-3 h-10 w-72" />
+        <div className="devflow-skeleton mt-3 h-6 w-full max-w-2xl" />
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
-          <Card key={index} className="rounded-[1.75rem] border-border/70">
+          <Card key={index}>
             <CardHeader>
-              <div className="h-4 w-32 rounded bg-muted/40" />
+              <div className="devflow-skeleton h-4 w-32" />
             </CardHeader>
             <CardContent>
-              <div className="h-9 w-24 rounded bg-muted/50" />
+              <div className="devflow-skeleton h-9 w-24" />
             </CardContent>
           </Card>
         ))}
@@ -88,11 +88,11 @@ async function DashboardContent() {
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-0">
-      <div className="rounded-[2rem] border border-border/70 bg-background/90 p-8 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.28em] text-emerald-600">
+      <div className="devflow-panel p-8">
+        <p className="devflow-kicker">
           Dashboard
         </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">
           오늘의 집중 흐름을 한눈에 확인합니다.
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
@@ -102,15 +102,15 @@ async function DashboardContent() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Clock3 className="h-4 w-4 text-sky-600" />
+              <Clock3 className="h-4 w-4 text-primary" />
               오늘 총 집중 시간
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tracking-tight">
+            <p className="text-3xl font-semibold">
               {data.summary.totalFocusMinutes}분
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -137,15 +137,15 @@ async function DashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Timer className="h-4 w-4 text-emerald-600" />
+              <Timer className="h-4 w-4 text-green-500" />
               완료 세션 수
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tracking-tight">
+            <p className="text-3xl font-semibold">
               {data.summary.completedSessions}개
             </p>
             {data.summary.goalSessions ? (
@@ -161,7 +161,7 @@ async function DashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <FolderKanban className="h-4 w-4 text-amber-600" />
@@ -169,21 +169,21 @@ async function DashboardContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xl font-semibold tracking-tight">
+            <p className="text-xl font-semibold">
               {data.summary.topCategoryName ?? "아직 없음"}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Sparkles className="h-4 w-4 text-fuchsia-600" />
+              <Sparkles className="h-4 w-4 text-purple-500" />
               최고 집중 시간대
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xl font-semibold tracking-tight">
+            <p className="text-xl font-semibold">
               {data.summary.bestTimeBlock ?? "데이터 없음"}
             </p>
           </CardContent>
@@ -191,15 +191,15 @@ async function DashboardContent() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Sparkles className="h-5 w-5 text-fuchsia-600" />
+              <Sparkles className="h-5 w-5 text-purple-500" />
               오늘의 한 줄 인사이트
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-[1.5rem] bg-muted/30 p-6">
+            <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-6">
               <p className="text-lg font-semibold text-foreground">
                 {data.insight?.title ?? "인사이트를 준비 중입니다"}
               </p>
@@ -211,13 +211,13 @@ async function DashboardContent() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/timer"
-                className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-[#2563EB] active:scale-[0.98]"
               >
                 새 세션 시작
               </Link>
               <Link
                 href="/history"
-                className="rounded-full border border-border/70 px-4 py-2 text-sm font-medium text-foreground"
+                className="rounded-md border border-[#2F3A49] px-4 py-2 text-sm font-medium text-foreground transition hover:bg-[#1B222C] active:scale-[0.98]"
               >
                 히스토리 보기
               </Link>
@@ -225,10 +225,10 @@ async function DashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border-border/70">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <History className="h-5 w-5 text-emerald-600" />
+              <History className="h-5 w-5 text-green-500" />
               최근 세션
             </CardTitle>
           </CardHeader>
@@ -241,7 +241,7 @@ async function DashboardContent() {
               data.recentSessions.map((session) => (
                 <div
                   key={session.id}
-                  className="rounded-2xl border border-border/70 bg-muted/20 p-4"
+                  className="rounded-lg border border-border bg-transparent p-4 transition hover:bg-[#1B222C]"
                 >
                   <p className="font-medium text-foreground">
                     {session.title || "제목 없는 세션"}
