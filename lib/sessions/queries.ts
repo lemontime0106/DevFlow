@@ -19,6 +19,137 @@ import type {
 type SessionRow = Database["public"]["Tables"]["sessions"]["Row"];
 type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
 type DailyGoalRow = Database["public"]["Tables"]["daily_goals"]["Row"];
+type UserRow = Database["public"]["Tables"]["users"]["Row"];
+
+const DEFAULT_TIME_ZONE = "Asia/Seoul";
+const monthDayFormatter = new Intl.DateTimeFormat("ko-KR", {
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
+});
+
+interface DateParts {
+  year: number;
+  month: number;
+  day: number;
+}
+
+function parseOffsetMinutes(text: string) {
+  const normalized = text.replace("UTC", "GMT");
+  const match = normalized.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/);
+
+  if (!match) {
+    return 0;
+  }
+
+  const sign = match[1] === "-" ? -1 : 1;
+  const hours = Number(match[2] ?? "0");
+  const minutes = Number(match[3] ?? "0");
+
+  return sign * (hours * 60 + minutes);
+}
+
+function getTimeZoneOffsetMinutes(date: Date, timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    timeZoneName: "longOffset",
+  });
+  const offsetText =
+    formatter
+      .formatToParts(date)
+      .find((part) => part.type === "timeZoneName")
+      ?.value ?? "GMT";
+
+  return parseOffsetMinutes(offsetText);
+}
+
+function getDatePartsInTimeZone(date: Date, timeZone: string): DateParts {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(date);
+
+  return {
+    year: Number(parts.find((part) => part.type === "year")?.value ?? "0"),
+    month: Number(parts.find((part) => part.type === "month")?.value ?? "1"),
+    day: Number(parts.find((part) => part.type === "day")?.value ?? "1"),
+  };
+}
+
+function formatDateParts(parts: DateParts) {
+  return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(
+    parts.day,
+  ).padStart(2, "0")}`;
+}
+
+function addDays(parts: DateParts, days: number): DateParts {
+  const date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+  date.setUTCDate(date.getUTCDate() + days);
+
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+  };
+}
+
+function getZonedDateTimeUtc(
+  parts: DateParts,
+  timeZone: string,
+  hours = 0,
+  minutes = 0,
+  seconds = 0,
+  milliseconds = 0,
+) {
+  let utcMs = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    hours,
+    minutes,
+    seconds,
+    milliseconds,
+  );
+
+  for (let index = 0; index < 2; index += 1) {
+    const offsetMinutes = getTimeZoneOffsetMinutes(new Date(utcMs), timeZone);
+    utcMs =
+      Date.UTC(
+        parts.year,
+        parts.month - 1,
+        parts.day,
+        hours,
+        minutes,
+        seconds,
+        milliseconds,
+      ) -
+      offsetMinutes * 60 * 1000;
+  }
+
+  return new Date(utcMs);
+}
+
+function getHourInTimeZone(value: string, timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "2-digit",
+    hour12: false,
+  });
+
+  return Number(
+    formatter
+      .formatToParts(new Date(value))
+      .find((part) => part.type === "hour")
+      ?.value ?? "0",
+  );
+}
+
+function getDayOfWeekFromParts(parts: DateParts) {
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay();
+}
 
 function mapCategory(row: CategoryRow): Category {
   return {
@@ -66,44 +197,71 @@ function mapDailyGoal(row: DailyGoalRow): DailyGoal {
   };
 }
 
-function getDayRange(baseDate = new Date()) {
-  const start = new Date(baseDate);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(baseDate);
-  end.setHours(23, 59, 59, 999);
+async function getUserTimeZone(userId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("users")
+    .select("timezone")
+    .eq("id", userId)
+    .maybeSingle<UserRow>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data?.timezone || DEFAULT_TIME_ZONE;
+}
+
+function getDayRange(timeZone: string, baseDate = new Date()) {
+  const dateParts = getDatePartsInTimeZone(baseDate, timeZone);
+  const start = getZonedDateTimeUtc(dateParts, timeZone, 0, 0, 0, 0);
+  const nextDayStart = getZonedDateTimeUtc(
+    addDays(dateParts, 1),
+    timeZone,
+    0,
+    0,
+    0,
+    0,
+  );
+  const end = new Date(nextDayStart.getTime() - 1);
 
   return {
+    dateParts,
     startIso: start.toISOString(),
     endIso: end.toISOString(),
   };
 }
 
-function getGoalDate(baseDate = new Date()) {
-  const year = baseDate.getFullYear();
-  const month = String(baseDate.getMonth() + 1).padStart(2, "0");
-  const day = String(baseDate.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+function getGoalDate(timeZone: string, baseDate = new Date()) {
+  return formatDateParts(getDatePartsInTimeZone(baseDate, timeZone));
 }
 
-function getDateRangeLabel(start: Date, end: Date) {
-  const formatter = new Intl.DateTimeFormat("ko-KR", {
-    month: "long",
-    day: "numeric",
-  });
+function getDateRangeLabel(start: DateParts, end: DateParts) {
+  const startDate = new Date(Date.UTC(start.year, start.month - 1, start.day));
+  const endDate = new Date(Date.UTC(end.year, end.month - 1, end.day));
 
-  return `${formatter.format(start)} - ${formatter.format(end)}`;
+  return `${monthDayFormatter.format(startDate)} - ${monthDayFormatter.format(
+    endDate,
+  )}`;
 }
 
-function getWeekRange(baseDate = new Date()) {
-  const end = new Date(baseDate);
-  end.setHours(23, 59, 59, 999);
-
-  const start = new Date(baseDate);
-  start.setDate(start.getDate() - 6);
-  start.setHours(0, 0, 0, 0);
+function getWeekRange(timeZone: string, baseDate = new Date()) {
+  const endDateParts = getDatePartsInTimeZone(baseDate, timeZone);
+  const startDateParts = addDays(endDateParts, -6);
+  const start = getZonedDateTimeUtc(startDateParts, timeZone, 0, 0, 0, 0);
+  const nextDayStart = getZonedDateTimeUtc(
+    addDays(endDateParts, 1),
+    timeZone,
+    0,
+    0,
+    0,
+    0,
+  );
+  const end = new Date(nextDayStart.getTime() - 1);
 
   return {
+    startDateParts,
+    endDateParts,
     start,
     end,
     startIso: start.toISOString(),
@@ -111,13 +269,12 @@ function getWeekRange(baseDate = new Date()) {
   };
 }
 
-function getBestTimeBlock(sessions: FocusSession[]) {
+function getBestTimeBlock(sessions: FocusSession[], timeZone: string) {
   const buckets = new Map<string, number>();
 
   for (const session of sessions) {
-    const hour = new Date(session.startedAt).getHours();
-    const label =
-      hour < 12 ? "오전" : hour < 18 ? "오후" : "저녁";
+    const hour = getHourInTimeZone(session.startedAt, timeZone);
+    const label = hour < 12 ? "오전" : hour < 18 ? "오후" : "저녁";
     buckets.set(label, (buckets.get(label) ?? 0) + (session.actualMinutes ?? 0));
   }
 
@@ -388,6 +545,7 @@ export async function getHistoryPageData(
   filters: HistoryFilters,
 ): Promise<HistoryPageData> {
   const supabase = await createClient();
+  const timeZone = await getUserTimeZone(userId);
   let query = supabase
     .from("sessions")
     .select("*")
@@ -404,9 +562,17 @@ export async function getHistoryPageData(
   }
 
   if (filters.date) {
+    const [year, month, day] = filters.date.split("-").map(Number);
+    const dateParts = { year, month, day };
+    const start = getZonedDateTimeUtc(dateParts, timeZone, 0, 0, 0, 0);
+    const end = new Date(
+      getZonedDateTimeUtc(addDays(dateParts, 1), timeZone, 0, 0, 0, 0).getTime() -
+        1,
+    );
+
     query = query
-      .gte("started_at", `${filters.date}T00:00:00.000Z`)
-      .lte("started_at", `${filters.date}T23:59:59.999Z`);
+      .gte("started_at", start.toISOString())
+      .lte("started_at", end.toISOString());
   }
 
   const [{ data: sessions, error }, categories] = await Promise.all([
@@ -428,11 +594,13 @@ export async function getDashboardPageData(
   userId: string,
 ): Promise<DashboardPageData> {
   const supabase = await createClient();
-  const today = getDayRange();
+  const timeZone = await getUserTimeZone(userId);
+  const today = getDayRange(timeZone);
   const yesterday = getDayRange(
+    timeZone,
     new Date(Date.now() - 24 * 60 * 60 * 1000),
   );
-  const goalDate = getGoalDate();
+  const goalDate = getGoalDate(timeZone);
 
   const [todayResult, yesterdayResult, recentResult, categories, goalResult] = await Promise.all([
     supabase
@@ -515,7 +683,7 @@ export async function getDashboardPageData(
   )[0]?.[0];
   const topCategoryName =
     categories.find((category) => category.id === topCategoryId)?.name ?? null;
-  const bestTimeBlock = getBestTimeBlock(completedToday);
+  const bestTimeBlock = getBestTimeBlock(completedToday, timeZone);
   const dailyGoal = goalResult.data ? mapDailyGoal(goalResult.data) : null;
 
   const summary: DailyDashboardSummary = {
@@ -569,7 +737,7 @@ export async function getSettingsPageData(
   userId: string,
 ): Promise<SettingsPageData> {
   const supabase = await createClient();
-  const goalDate = getGoalDate();
+  const goalDate = getGoalDate(await getUserTimeZone(userId));
   const [{ data, error }, categories] = await Promise.all([
     supabase
       .from("daily_goals")
@@ -595,7 +763,8 @@ export async function getWeeklyReportPageData(
   userId: string,
 ): Promise<WeeklyReportPageData> {
   const supabase = await createClient();
-  const weekRange = getWeekRange();
+  const timeZone = await getUserTimeZone(userId);
+  const weekRange = getWeekRange(timeZone);
 
   const [{ data: sessions, error: sessionsError }, { data: goals, error: goalsError }, categories] =
     await Promise.all([
@@ -610,8 +779,8 @@ export async function getWeeklyReportPageData(
         .from("daily_goals")
         .select("*")
         .eq("user_id", userId)
-        .gte("goal_date", getGoalDate(weekRange.start))
-        .lte("goal_date", getGoalDate(weekRange.end)),
+        .gte("goal_date", formatDateParts(weekRange.startDateParts))
+        .lte("goal_date", formatDateParts(weekRange.endDateParts)),
       getCategoriesForUser(userId),
     ]);
 
@@ -667,16 +836,14 @@ export async function getWeeklyReportPageData(
 
   const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
   const dayStats = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(weekRange.start);
-    date.setDate(weekRange.start.getDate() + index);
-    const dateKey = getGoalDate(date);
+    const dateParts = addDays(weekRange.startDateParts, index);
+    const dateKey = formatDateParts(dateParts);
     const sessionsOfDay = completedSessions.filter((session) => {
-      const started = new Date(session.startedAt);
-      return getGoalDate(started) === dateKey;
+      return getGoalDate(timeZone, new Date(session.startedAt)) === dateKey;
     });
 
     return {
-      label: weekdayLabels[date.getDay()],
+      label: weekdayLabels[getDayOfWeekFromParts(dateParts)],
       date: dateKey,
       totalMinutes: sessionsOfDay.reduce(
         (sum, session) => sum + (session.actualMinutes ?? 0),
@@ -706,7 +873,7 @@ export async function getWeeklyReportPageData(
 
   const timeBlocks = timeBlockDefinitions.map(({ label, matcher }) => {
     const blockSessions = mappedSessions.filter((session) =>
-      matcher(new Date(session.startedAt).getHours()),
+      matcher(getHourInTimeZone(session.startedAt, timeZone)),
     );
     const completedInBlock = blockSessions.filter(
       (session) => session.status === "completed",
@@ -775,7 +942,10 @@ export async function getWeeklyReportPageData(
     timeBlocks,
     dayStats,
     recentCompletedSessions: completedSessions.slice(0, 5),
-    weekRangeLabel: getDateRangeLabel(weekRange.start, weekRange.end),
+    weekRangeLabel: getDateRangeLabel(
+      weekRange.startDateParts,
+      weekRange.endDateParts,
+    ),
     insights,
   };
 }

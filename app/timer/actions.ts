@@ -71,6 +71,7 @@ export async function startSessionAction(formData: FormData) {
   revalidatePath("/timer");
   revalidatePath("/dashboard");
   revalidatePath("/history");
+  revalidatePath("/reports/weekly");
 }
 
 export async function cancelSessionAction(formData: FormData) {
@@ -103,6 +104,7 @@ export async function cancelSessionAction(formData: FormData) {
   revalidatePath("/timer");
   revalidatePath("/dashboard");
   revalidatePath("/history");
+  revalidatePath("/reports/weekly");
 }
 
 export async function completeSessionAction(formData: FormData) {
@@ -170,6 +172,7 @@ export async function completeSessionAction(formData: FormData) {
   revalidatePath("/timer");
   revalidatePath("/dashboard");
   revalidatePath("/history");
+  revalidatePath("/reports/weekly");
 }
 
 export async function interruptSessionAction(formData: FormData) {
@@ -220,6 +223,7 @@ export async function interruptSessionAction(formData: FormData) {
   revalidatePath("/timer");
   revalidatePath("/dashboard");
   revalidatePath("/history");
+  revalidatePath("/reports/weekly");
 }
 
 export async function resumeInterruptedSessionAction(formData: FormData) {
@@ -283,4 +287,5 @@ export async function resumeInterruptedSessionAction(formData: FormData) {
   revalidatePath("/timer");
   revalidatePath("/dashboard");
   revalidatePath("/history");
+  revalidatePath("/reports/weekly");
 }
