@@ -4,6 +4,7 @@ import type {
   DailyGoal,
   FocusSession,
   InsightMessage,
+  UserSettings,
   WeeklyCategoryBreakdown,
   WeeklyDayStat,
   WeeklyReportSummary,
@@ -14,6 +15,7 @@ export interface TimerPageData {
   activeSession: FocusSession | null;
   resumableSession: FocusSession | null;
   categories: Category[];
+  settings: UserSettings | null;
 }
 
 export interface HistoryFilters {
@@ -36,6 +38,7 @@ export interface DashboardPageData {
 
 export interface SettingsPageData {
   dailyGoal: DailyGoal | null;
+  settings: UserSettings | null;
   goalDate: string;
   categories: Category[];
 }

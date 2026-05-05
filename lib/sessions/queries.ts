@@ -6,6 +6,7 @@ import type {
   DailyGoal,
   FocusSession,
   InsightMessage,
+  UserSettings,
 } from "@/lib/types/domain";
 import type {
   DashboardPageData,
@@ -19,6 +20,7 @@ import type {
 type SessionRow = Database["public"]["Tables"]["sessions"]["Row"];
 type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
 type DailyGoalRow = Database["public"]["Tables"]["daily_goals"]["Row"];
+type UserSettingsRow = Database["public"]["Tables"]["user_settings"]["Row"];
 type UserRow = Database["public"]["Tables"]["users"]["Row"];
 
 const DEFAULT_TIME_ZONE = "Asia/Seoul";
@@ -158,6 +160,7 @@ function mapCategory(row: CategoryRow): Category {
     name: row.name,
     color: row.color,
     isDefault: row.is_default,
+    isActive: row.is_active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -192,6 +195,16 @@ function mapDailyGoal(row: DailyGoalRow): DailyGoal {
     targetFocusMinutes: row.target_focus_minutes,
     targetSessions: row.target_sessions,
     targetDaysPerWeek: row.target_days_per_week,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function mapUserSettings(row: UserSettingsRow): UserSettings {
+  return {
+    userId: row.user_id,
+    defaultFocusMinutes: row.default_focus_minutes,
+    defaultBreakMinutes: row.default_break_minutes,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -501,8 +514,13 @@ export async function getCategoriesForUser(userId: string) {
 
 export async function getTimerPageData(userId: string): Promise<TimerPageData> {
   const supabase = await createClient();
-  const [categories, activeSessionResult, resumableSessionResult] = await Promise.all([
+  const [categories, settingsResult, activeSessionResult, resumableSessionResult] = await Promise.all([
     getCategoriesForUser(userId),
+    supabase
+      .from("user_settings")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle(),
     supabase
       .from("sessions")
       .select("*")
@@ -521,6 +539,10 @@ export async function getTimerPageData(userId: string): Promise<TimerPageData> {
       .maybeSingle(),
   ]);
 
+  if (settingsResult.error) {
+    throw new Error(settingsResult.error.message);
+  }
+
   if (activeSessionResult.error) {
     throw new Error(activeSessionResult.error.message);
   }
@@ -530,7 +552,8 @@ export async function getTimerPageData(userId: string): Promise<TimerPageData> {
   }
 
   return {
-    categories,
+    categories: categories.filter((category) => category.isActive),
+    settings: settingsResult.data ? mapUserSettings(settingsResult.data) : null,
     activeSession: activeSessionResult.data
       ? mapSession(activeSessionResult.data)
       : null,
@@ -738,12 +761,17 @@ export async function getSettingsPageData(
 ): Promise<SettingsPageData> {
   const supabase = await createClient();
   const goalDate = getGoalDate(await getUserTimeZone(userId));
-  const [{ data, error }, categories] = await Promise.all([
+  const [{ data, error }, settingsResult, categories] = await Promise.all([
     supabase
       .from("daily_goals")
       .select("*")
       .eq("user_id", userId)
       .eq("goal_date", goalDate)
+      .maybeSingle(),
+    supabase
+      .from("user_settings")
+      .select("*")
+      .eq("user_id", userId)
       .maybeSingle(),
     getCategoriesForUser(userId),
   ]);
@@ -752,8 +780,13 @@ export async function getSettingsPageData(
     throw new Error(error.message);
   }
 
+  if (settingsResult.error) {
+    throw new Error(settingsResult.error.message);
+  }
+
   return {
     dailyGoal: data ? mapDailyGoal(data) : null,
+    settings: settingsResult.data ? mapUserSettings(settingsResult.data) : null,
     goalDate,
     categories,
   };

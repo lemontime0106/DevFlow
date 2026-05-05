@@ -26,6 +26,15 @@ export interface Category {
   name: string;
   color: string;
   isDefault: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserSettings {
+  userId: string;
+  defaultFocusMinutes: number;
+  defaultBreakMinutes: number;
   createdAt: string;
   updatedAt: string;
 }

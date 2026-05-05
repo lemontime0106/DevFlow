@@ -9,10 +9,24 @@ function toPositiveInt(value: FormDataEntryValue | null, fallback: number) {
   return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : fallback;
 }
 
+function toNonNegativeInt(value: FormDataEntryValue | null, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed) : fallback;
+}
+
 function toNullableText(value: FormDataEntryValue | null) {
   if (!value) return null;
   const text = String(value).trim();
   return text.length > 0 ? text : null;
+}
+
+function toUuid(value: string | null) {
+  const text = String(value ?? "").trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    text,
+  )
+    ? text
+    : null;
 }
 
 function getElapsedMinutes(
@@ -50,7 +64,7 @@ export async function startSessionAction(formData: FormData) {
   }
 
   const focusMinutes = toPositiveInt(formData.get("focusMinutes"), 25);
-  const breakMinutes = toPositiveInt(formData.get("breakMinutes"), 5);
+  const breakMinutes = toNonNegativeInt(formData.get("breakMinutes"), 5);
   const startedAt = new Date().toISOString();
 
   const { error } = await supabase.from("sessions").insert({
@@ -117,7 +131,7 @@ export async function completeSessionAction(formData: FormData) {
   if (!sessionId) return;
 
   const title = String(formData.get("title") ?? "").trim();
-  const categoryId = toNullableText(formData.get("categoryId"));
+  const requestedCategoryId = toUuid(toNullableText(formData.get("categoryId")));
   const difficulty = toNullableText(formData.get("difficulty"));
   const selfRatingRaw = Number(formData.get("selfRating"));
   const selfRating =
@@ -127,6 +141,24 @@ export async function completeSessionAction(formData: FormData) {
   const memo = toNullableText(formData.get("memo"));
 
   const supabase = await createClient();
+  let categoryId: string | null = null;
+
+  if (requestedCategoryId) {
+    const { data: category, error: categoryError } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("id", requestedCategoryId)
+      .eq("is_active", true)
+      .or(`user_id.is.null,user_id.eq.${authState.user.id}`)
+      .maybeSingle();
+
+    if (categoryError) {
+      throw new Error(categoryError.message);
+    }
+
+    categoryId = category?.id ?? null;
+  }
+
   const { data: session, error: fetchError } = await supabase
     .from("sessions")
     .select("*")

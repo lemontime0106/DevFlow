@@ -1,7 +1,9 @@
 import {
   createCategoryAction,
+  deactivateCategoryAction,
   updateCategoryAction,
   upsertDailyGoalAction,
+  upsertUserSettingsAction,
 } from "@/app/settings/actions";
 import { CategoryBadge } from "@/components/sessions/category-badge";
 import { ToastFeedback } from "@/components/ui/toast-feedback";
@@ -45,6 +47,14 @@ function getSettingsToast(params: { saved?: string; error?: string }) {
     return "카테고리가 수정되었습니다.";
   }
 
+  if (params.saved === "category-deactivated") {
+    return "카테고리가 비활성화되었습니다.";
+  }
+
+  if (params.saved === "settings") {
+    return "타이머 기본값이 저장되었습니다.";
+  }
+
   if (params.error === "duplicate-category") {
     return "이미 같은 이름의 카테고리가 있습니다.";
   }
@@ -83,6 +93,12 @@ async function SettingsContent({
   );
   const customCategories = data.categories.filter(
     (category) => !category.isDefault,
+  );
+  const activeCustomCategories = customCategories.filter(
+    (category) => category.isActive,
+  );
+  const inactiveCustomCategories = customCategories.filter(
+    (category) => !category.isActive,
   );
 
   return (
@@ -162,19 +178,44 @@ async function SettingsContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Timer className="h-5 w-5 text-primary" />
-                현재 연결 상태
+                타이머 기본값
               </CardTitle>
+              <CardDescription>
+                저장한 값은 새 집중 세션 시작 폼의 기본 입력값으로 사용됩니다.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p>
-                오늘 목표 시간: {data.dailyGoal?.targetFocusMinutes ?? 120}분
-              </p>
-              <p>
-                오늘 목표 세션 수: {data.dailyGoal?.targetSessions ?? 4}개
-              </p>
-              <p>
-                주간 목표 일수: {data.dailyGoal?.targetDaysPerWeek ?? 5}일
-              </p>
+            <CardContent>
+              <form action={upsertUserSettingsAction} className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="default-focus-minutes">
+                      기본 집중 시간(분)
+                    </Label>
+                    <Input
+                      id="default-focus-minutes"
+                      name="defaultFocusMinutes"
+                      type="number"
+                      min={1}
+                      max={180}
+                      defaultValue={data.settings?.defaultFocusMinutes ?? 25}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="default-break-minutes">
+                      기본 휴식 시간(분)
+                    </Label>
+                    <Input
+                      id="default-break-minutes"
+                      name="defaultBreakMinutes"
+                      type="number"
+                      min={0}
+                      max={60}
+                      defaultValue={data.settings?.defaultBreakMinutes ?? 5}
+                    />
+                  </div>
+                </div>
+                <Button className="w-full">타이머 기본값 저장</Button>
+              </form>
             </CardContent>
           </Card>
 
@@ -228,8 +269,8 @@ async function SettingsContent({
                   Custom
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {customCategories.length > 0 ? (
-                    customCategories.map((category) => (
+                  {activeCustomCategories.length > 0 ? (
+                    activeCustomCategories.map((category) => (
                       <form
                         key={category.id}
                         action={updateCategoryAction}
@@ -268,6 +309,14 @@ async function SettingsContent({
                           <Button type="submit" variant="secondary">
                             수정
                           </Button>
+                          <Button
+                            type="submit"
+                            formAction={deactivateCategoryAction}
+                            formNoValidate
+                            variant="outline"
+                          >
+                            비활성화
+                          </Button>
                         </div>
                       </form>
                     ))
@@ -278,6 +327,29 @@ async function SettingsContent({
                   )}
                 </div>
               </div>
+              {inactiveCustomCategories.length > 0 ? (
+                <div>
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                    Inactive
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {inactiveCustomCategories.map((category) => (
+                      <div
+                        key={category.id}
+                        className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 opacity-70"
+                      >
+                        <CategoryBadge
+                          name={category.name}
+                          color={category.color}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          새 세션 제외
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               <div>
                 <p className="text-xs font-semibold uppercase text-muted-foreground">
                   Default
@@ -306,13 +378,20 @@ async function SettingsContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <TrendingUp className="h-5 w-5 text-amber-600" />
-                다음 확장 후보
+                현재 연결 상태
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
-              <p>기본 집중/휴식 시간 프리셋 연결</p>
-              <p>알림 on/off 및 세션 종료 알림 설정</p>
-              <p>카테고리별 목표 분리와 목표 초과 기록 분석</p>
+              <p>
+                오늘 목표 시간: {data.dailyGoal?.targetFocusMinutes ?? 120}분
+              </p>
+              <p>
+                오늘 목표 세션 수: {data.dailyGoal?.targetSessions ?? 4}개
+              </p>
+              <p>
+                기본 타이머: {data.settings?.defaultFocusMinutes ?? 25}분 집중 /{" "}
+                {data.settings?.defaultBreakMinutes ?? 5}분 휴식
+              </p>
             </CardContent>
           </Card>
         </div>

@@ -14,6 +14,7 @@ export type Database = {
           color: string;
           created_at: string;
           id: string;
+          is_active: boolean;
           is_default: boolean;
           name: string;
           updated_at: string;
@@ -23,6 +24,7 @@ export type Database = {
           color: string;
           created_at?: string;
           id?: string;
+          is_active?: boolean;
           is_default?: boolean;
           name: string;
           updated_at?: string;
@@ -32,6 +34,7 @@ export type Database = {
           color?: string;
           created_at?: string;
           id?: string;
+          is_active?: boolean;
           is_default?: boolean;
           name?: string;
           updated_at?: string;
@@ -153,6 +156,30 @@ export type Database = {
           id?: string;
           timezone?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      user_settings: {
+        Row: {
+          created_at: string;
+          default_break_minutes: number;
+          default_focus_minutes: number;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          default_break_minutes?: number;
+          default_focus_minutes?: number;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          default_break_minutes?: number;
+          default_focus_minutes?: number;
+          updated_at?: string;
+          user_id?: string;
         };
         Relationships: [];
       };

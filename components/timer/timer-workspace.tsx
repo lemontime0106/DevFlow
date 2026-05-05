@@ -46,8 +46,12 @@ function formatDuration(totalSeconds: number) {
 
 export function TimerWorkspace({ data }: TimerWorkspaceProps) {
   const [now, setNow] = useState(Date.now());
-  const [focusMinutes, setFocusMinutes] = useState(25);
-  const [breakMinutes, setBreakMinutes] = useState(5);
+  const [focusMinutes, setFocusMinutes] = useState(
+    data.settings?.defaultFocusMinutes ?? 25,
+  );
+  const [breakMinutes, setBreakMinutes] = useState(
+    data.settings?.defaultBreakMinutes ?? 5,
+  );
 
   useEffect(() => {
     if (!data.activeSession) return;
@@ -131,9 +135,13 @@ export function TimerWorkspace({ data }: TimerWorkspaceProps) {
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
+                  {
+                    label: "My Default",
+                    focus: data.settings?.defaultFocusMinutes ?? 25,
+                    breakMinutes: data.settings?.defaultBreakMinutes ?? 5,
+                  },
                   { label: "Pomodoro", focus: 25, breakMinutes: 5 },
                   { label: "Deep Work", focus: 50, breakMinutes: 10 },
-                  { label: "Quick Sprint", focus: 15, breakMinutes: 3 },
                 ].map((preset) => (
                   <button
                     key={preset.label}

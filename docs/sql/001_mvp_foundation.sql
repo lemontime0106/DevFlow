@@ -25,6 +25,7 @@ create table if not exists public.categories (
   name text not null,
   color text not null,
   is_default boolean not null default false,
+  is_active boolean not null default true,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   constraint categories_color_hex_check check (color ~ '^#[0-9A-Fa-f]{6}$'),
@@ -33,6 +34,9 @@ create table if not exists public.categories (
 
 create unique index if not exists categories_user_name_unique_idx
   on public.categories (coalesce(user_id, '00000000-0000-0000-0000-000000000000'::uuid), lower(name));
+
+create index if not exists categories_user_active_idx
+  on public.categories (user_id, is_active);
 
 create table if not exists public.sessions (
   id uuid primary key default gen_random_uuid(),
@@ -82,6 +86,18 @@ create table if not exists public.daily_goals (
   constraint daily_goals_user_date_unique unique (user_id, goal_date)
 );
 
+create table if not exists public.user_settings (
+  user_id uuid primary key references public.users (id) on delete cascade,
+  default_focus_minutes integer not null default 25,
+  default_break_minutes integer not null default 5,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  constraint user_settings_default_focus_minutes_check
+    check (default_focus_minutes between 1 and 180),
+  constraint user_settings_default_break_minutes_check
+    check (default_break_minutes between 0 and 60)
+);
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -94,6 +110,11 @@ begin
   on conflict (id) do update
   set email = excluded.email,
       updated_at = timezone('utc', now());
+
+  insert into public.user_settings (user_id)
+  values (new.id)
+  on conflict (user_id) do nothing;
+
   return new;
 end;
 $$;
@@ -123,10 +144,16 @@ create trigger set_daily_goals_updated_at
 before update on public.daily_goals
 for each row execute procedure public.set_updated_at();
 
+drop trigger if exists set_user_settings_updated_at on public.user_settings;
+create trigger set_user_settings_updated_at
+before update on public.user_settings
+for each row execute procedure public.set_updated_at();
+
 alter table public.users enable row level security;
 alter table public.categories enable row level security;
 alter table public.sessions enable row level security;
 alter table public.daily_goals enable row level security;
+alter table public.user_settings enable row level security;
 
 drop policy if exists "Users can view their own profile" on public.users;
 create policy "Users can view their own profile"
@@ -195,6 +222,14 @@ to authenticated
 using (auth.uid() is not null and auth.uid() = user_id)
 with check (auth.uid() is not null and auth.uid() = user_id);
 
+drop policy if exists "Users can manage their own settings" on public.user_settings;
+create policy "Users can manage their own settings"
+on public.user_settings
+for all
+to authenticated
+using (auth.uid() is not null and auth.uid() = user_id)
+with check (auth.uid() is not null and auth.uid() = user_id);
+
 insert into public.categories (user_id, name, color, is_default)
 values
   (null, 'Feature Development', '#2563EB', true),
@@ -206,4 +241,5 @@ on conflict (coalesce(user_id, '00000000-0000-0000-0000-000000000000'::uuid), lo
 do update set
   color = excluded.color,
   is_default = true,
+  is_active = true,
   updated_at = timezone('utc', now());

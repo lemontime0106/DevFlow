@@ -10,6 +10,20 @@ function toPositiveInt(value: FormDataEntryValue | null, fallback: number) {
   return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : fallback;
 }
 
+function toBoundedInt(
+  value: FormDataEntryValue | null,
+  fallback: number,
+  min: number,
+  max: number,
+) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return Math.min(max, Math.max(min, Math.round(parsed)));
+}
+
 function toGoalDate(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
   return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : null;
@@ -76,6 +90,41 @@ export async function upsertDailyGoalAction(formData: FormData) {
   revalidatePath("/settings");
   revalidatePath("/dashboard");
   redirect("/settings?saved=goal");
+}
+
+export async function upsertUserSettingsAction(formData: FormData) {
+  const authState = await getAuthUser();
+  if (!authState) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
+  const defaultFocusMinutes = toBoundedInt(
+    formData.get("defaultFocusMinutes"),
+    25,
+    1,
+    180,
+  );
+  const defaultBreakMinutes = toBoundedInt(
+    formData.get("defaultBreakMinutes"),
+    5,
+    0,
+    60,
+  );
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("user_settings").upsert({
+    user_id: authState.user.id,
+    default_focus_minutes: defaultFocusMinutes,
+    default_break_minutes: defaultBreakMinutes,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/timer");
+  redirect("/settings?saved=settings");
 }
 
 export async function createCategoryAction(formData: FormData) {
@@ -158,4 +207,41 @@ export async function updateCategoryAction(formData: FormData) {
   revalidatePath("/reports/weekly");
   revalidatePath("/dashboard");
   redirect("/settings?saved=category-updated");
+}
+
+export async function deactivateCategoryAction(formData: FormData) {
+  const authState = await getAuthUser();
+  if (!authState) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
+  const categoryId = toUuid(formData.get("categoryId"));
+  if (!categoryId) {
+    redirect("/settings?error=category-not-found");
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("categories")
+    .update({ is_active: false })
+    .eq("id", categoryId)
+    .eq("user_id", authState.user.id)
+    .eq("is_default", false)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    redirect("/settings?error=category-not-found");
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/timer");
+  revalidatePath("/history");
+  revalidatePath("/reports/weekly");
+  revalidatePath("/dashboard");
+  redirect("/settings?saved=category-deactivated");
 }

@@ -33,10 +33,10 @@
 - [x] 기본 카테고리는 수정 불가로 명확히 표시
 - [x] 사용 중인 사용자 카테고리 삭제 정책 결정
 - [x] 삭제 대신 비활성화가 필요한지 스키마 검토
-- [ ] `categories.is_active` SQL migration 추가
-- [ ] 카테고리 비활성화 서버 액션 추가
-- [ ] Settings에서 비활성화 UI 추가
-- [ ] `/timer`에서 active 카테고리만 선택 가능하게 필터링
+- [x] `categories.is_active` SQL migration 추가
+- [x] 카테고리 비활성화 서버 액션 추가
+- [x] Settings에서 비활성화 UI 추가
+- [x] `/timer`에서 active 카테고리만 선택 가능하게 필터링
 - [x] 카테고리 생성/수정 실패 메시지를 화면 안에서 표시
 
 완료 기준:
@@ -51,10 +51,10 @@
 - [x] 기본 집중 시간 저장 위치 결정
 - [x] 기본 휴식 시간 저장 위치 결정
 - [x] `users` 또는 별도 `user_settings` 테이블 중 하나로 스키마 결정
-- [ ] SQL migration 문서 추가
-- [ ] Supabase 타입 갱신
-- [ ] `/settings`에 기본 집중/휴식 시간 필드 추가
-- [ ] `/timer` 시작 폼에 저장된 preset 반영
+- [x] SQL migration 문서 추가
+- [x] Supabase 타입 갱신
+- [x] `/settings`에 기본 집중/휴식 시간 필드 추가
+- [x] `/timer` 시작 폼에 저장된 preset 반영
 
 완료 기준:
 
@@ -188,4 +188,4 @@
 - GA4는 측정 ID가 확보될 때까지 대기한다.
 - DB 스키마가 필요한 작업은 SQL 문서와 Supabase 타입 갱신을 같이 처리한다.
 - 1회차 정책/설계 결과는 `docs/phase-1-category-and-settings-plan.md`를 기준으로 한다.
-- 다음 개발 우선순위는 `categories.is_active`와 `user_settings` SQL migration 구현이다.
+- 다음 개발 우선순위는 migration 적용 후 Settings/Timer 런타임 확인과 세션 기록 수정 기능이다.
